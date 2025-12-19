@@ -1,1 +1,553 @@
-# time
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小秘永远爱韩总</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --love: #ec4899; /* 甜蜜粉色 */
+            --bg-body: #0f172a;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-body);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        .container {
+            width: 95vw;
+            max-width: 420px;
+            max-height: 92vh; 
+            height: auto;
+            background: #f9fafb;
+            border-radius: 28px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            box-shadow: 0 0 0 8px #1e293b, 0 25px 60px rgba(0,0,0,0.6);
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .container::-webkit-scrollbar { display: none; }
+
+        /* --- 顶部标题 (颜色已改为粉色) --- */
+        .app-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--love); /* 这里改为粉色 */
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(236, 72, 153, 0.15); /* 阴影也微调为粉色系 */
+            flex-shrink: 0;
+        }
+
+        /* 顶部信息 */
+        .top-row {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .label { font-size: 11px; color: var(--text-sub); margin-bottom: 2px; font-weight: 600; text-transform: uppercase;}
+        
+        .time-val { 
+            font-size: 24px;
+            font-weight: 700; 
+            color: var(--text-main); 
+            line-height: 1.1; 
+            font-variant-numeric: tabular-nums; 
+        }
+        
+        .date-val { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+        .stats-highlight { font-size: 18px; font-weight: 700; color: #16a34a; line-height: 1.1; }
+        .stats-sub { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+
+        /* 按钮组 */
+        .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; flex-shrink: 0; }
+        .record-btn {
+            padding: 14px; border: none; border-radius: 10px;
+            color: white; font-weight: 600; font-size: 15px;
+            cursor: pointer; box-shadow: 0 2px 4px -1px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-checkin { background: var(--primary); }
+        .btn-sample { background: var(--success); }
+        .record-btn:active { transform: scale(0.98); }
+
+        /* 标题栏 */
+        .history-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; flex-shrink: 0; margin-top: 4px;}
+        .history-title { font-size: 15px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 6px; }
+        .tool-btn { background: white; border: 1px solid #e5e7eb; border-radius: 6px; width: 26px; height: 26px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #4b5563; }
+
+        /* 日历容器 */
+        .calendar-container { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 16px;
+            display: flex; 
+            flex-direction: column;
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+        
+        .month-selector {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; padding: 4px; background: #f9fafb; border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .month-text { font-size: 15px; font-weight: 700; color: #1f2937; }
+        .nav-btn { border: none; background: transparent; padding: 2px 10px; font-size: 14px; color: var(--text-sub); cursor: pointer; }
+
+        .calendar-grid {
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 4px;
+        }
+        
+        .cal-head { text-align: center; font-size: 11px; color: #9ca3af; font-weight: 600; padding-bottom: 6px; }
+        
+        /* 格子样式 */
+        .cal-day {
+            aspect-ratio: 1 / 1; 
+            border: 1px solid #f3f4f6;
+            border-radius: 8px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 6px; 
+            background: white; 
+            color: var(--text-main);
+            position: relative; cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .day-num { 
+            font-size: 15px; 
+            font-weight: 600; 
+            line-height: 1; 
+            margin-bottom: 4px;
+            color: #374151;
+        }
+        
+        .day-duration { 
+            font-size: 10px; 
+            font-weight: 600; 
+            line-height: 1;
+            color: #10b981; 
+            min-height: 10px;
+        }
+
+        .cal-day.today { background: #fef3c7; border-color: #fcd34d; }
+        .cal-day.today .day-num { color: #92400e; font-weight: 700; }
+        
+        .cal-day.has-record { border-color: #bbf7d0; background: #f0fdf4; }
+        .cal-day.has-record .day-duration { color: #15803d; }
+        
+        .cal-day.selected { 
+            border: 2px solid var(--primary); 
+            background: #eef2ff;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+        
+        .cal-day.has-sample::after {
+            content: ''; position: absolute; top: 0; right: 0;
+            border-top: 12px solid #10b981; border-left: 12px solid transparent;
+            border-radius: 0 6px 0 0;
+        }
+        .empty { visibility: hidden; pointer-events: none; }
+
+        /* 月度统计栏 */
+        .month-summary {
+            margin-top: 15px; 
+            padding-top: 12px;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-around;
+        }
+        .summary-item { display: flex; flex-direction: column; align-items: center; }
+        .summary-label { font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
+        .summary-val { font-size: 14px; color: #374151; font-weight: 700; }
+
+        /* 底部纪念日 */
+        .footer-days {
+            text-align: center;
+            padding: 4px 0; 
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: auto;
+        }
+        .days-pill {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 500;
+            display: flex; align-items: center; gap: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .days-count { color: var(--love); font-weight: 800; font-size: 15px; }
+
+        /* 弹窗 */
+        .modal {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px);
+            display: flex; align-items: center; justify-content: center; z-index: 999; border-radius: 28px;
+        }
+        .modal-content { 
+            background: white; padding: 20px; border-radius: 16px; width: 85%; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: popIn 0.2s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-title { font-size: 18px; font-weight: 700; color: #1f2937; margin-bottom: 16px; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;}
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 13px; color: #6b7280; margin-bottom: 4px; }
+        .input-text { width: 100%; padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none;}
+        .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+        .btn-modal { padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; border: none; }
+        .btn-cancel { background: #f3f4f6; color: #4b5563; }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .remark-area { margin-top: 12px; padding: 10px; background: #fffbeb; border-radius: 8px; font-size: 13px; color: #92400e; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; color: #4b5563;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-title">小秘永远爱韩总 ❤️</div>
+
+    <div class="top-row">
+        <div class="info-card">
+            <div class="label">当前时间</div>
+            <div id="current-time" class="time-val">00:00</div>
+            <div id="current-date" class="date-val">--月--日</div>
+        </div>
+        <div class="info-card" style="align-items: center; text-align: center;">
+            <div class="label">今日时长</div>
+            <div id="today-stats-content">
+                <div class="stats-highlight">--</div>
+                <div class="stats-sub">0次</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="record-btn btn-checkin" onclick="recordTime()">📍 打卡</button>
+        <button class="record-btn btn-sample" onclick="showSampleModal()">🔬 取样</button>
+    </div>
+
+    <div class="history-header">
+        <div class="history-title">📅 历史记录</div>
+        <button class="tool-btn" onclick="showDeleteSelector()">🗑️</button>
+    </div>
+
+    <div id="calendar-root" class="calendar-container">
+        </div>
+    
+    <div class="footer-days">
+        <div class="days-pill">
+            韩总 & 小秘 <span style="color:#d1d5db">|</span> 在一起第 <span id="days-count-val" class="days-count">0</span> 天 ❤️
+        </div>
+    </div>
+
+    <div id="modal-layer"></div>
+</div>
+
+<script>
+    let clickLogs = JSON.parse(localStorage.getItem('clickLogs') || '{}');
+    let sampleData = JSON.parse(localStorage.getItem('sampleData') || '{}');
+    let currentMonth = new Date();
+    let selectedDate = null;
+    let pressTimer = null;
+
+    function init() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        updateDaysTogether();
+        render();
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-CN', {hour12:false, hour:'2-digit', minute:'2-digit'});
+        document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', {month:'short', day:'numeric', weekday:'long'});
+    }
+
+    function updateDaysTogether() {
+        // 计算起始日：2025-10-24
+        const startDate = new Date("2025-10-24T00:00:00"); 
+        const now = new Date();
+        const startReset = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const nowReset = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffTime = nowReset - startReset;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        document.getElementById('days-count-val').textContent = diffDays > 0 ? diffDays : 0;
+    }
+
+    function showSampleModal() {
+        const base = selectedDate || new Date().toISOString().slice(0,10);
+        const html = `
+            <div class="modal">
+                <div class="modal-content">
+                    <div class="modal-title">🔬 新增取样 <span style="font-size:12px;color:#6b7280;font-weight:400">${base}</span></div>
+                    <div class="form-group">
+                        <label>时间推演 (月/日)</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="number" id="p-m" class="input-text" placeholder="0月">
+                            <input type="number" id="p-d" class="input-text" placeholder="0日">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="s-rem" class="input-text" style="height:60px; resize:none;" placeholder="请输入..."></textarea>
+                    </div>
+                    <div class="modal-btns">
+                        <button class="btn-modal btn-cancel" onclick="closeM()">取消</button>
+                        <button class="btn-modal btn-confirm" onclick="confirmSample()">保存</button>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('modal-layer').innerHTML = html;
+    }
+
+    function confirmSample() {
+        const ms = parseInt(document.getElementById('p-m').value) || 0;
+        const ds = parseInt(document.getElementById('p-d').value) || 0;
+        const rem = document.getElementById('s-rem').value || "无备注";
+        const base = selectedDate ? new Date(selectedDate) : new Date();
+        base.setMonth(base.getMonth() + ms);
+        base.setDate(base.getDate() + ds);
+        const dateKey = base.toISOString().slice(0, 10);
+        sampleData[dateKey] = { remark: rem };
+        localStorage.setItem('sampleData', JSON.stringify(sampleData));
+        closeM(); render();
+    }
+
+    function showDeleteSelector() {
+        const allKeys = [...Object.keys(clickLogs), ...Object.keys(sampleData)];
+        const monthSet = new Set();
+        allKeys.forEach(key => { if (/^\d{4}-\d{2}-\d{2}$/.test(key)) monthSet.add(key.slice(0, 7)); });
+        const sortedMonths = Array.from(monthSet).sort().reverse();
+
+        if (sortedMonths.length === 0) {
+            document.getElementById('modal-layer').innerHTML = `<div class="modal"><div class="modal-content" style="text-align:center"><p style="color:#6b7280;margin:20px 0;">暂无数据</p><button class="btn-modal btn-cancel" style="width:100%" onclick="closeM()">返回</button></div></div>`;
+            return;
+        }
+        const options = sortedMonths.map(m => `<option value="${m}">${m}</option>`).join('');
+        document.getElementById('modal-layer').innerHTML = `
+            <div class="modal">
+                <div class="modal-content">
+                    <div class="modal-title">清空数据</div>
+                    <div class="form-group"><select id="del-month-target" class="input-text">${options}</select></div>
+                    <div class="modal-btns">
+                        <button class="btn-modal btn-cancel" onclick="closeM()">取消</button>
+                        <button class="btn-modal btn-confirm" onclick="executeMonthDelete()" style="background:var(--danger)">删除</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function executeMonthDelete() {
+        const prefix = document.getElementById('del-month-target').value;
+        if (confirm(`确认删除 ${prefix} 所有数据？`)) {
+            Object.keys(clickLogs).forEach(k => { if (k.startsWith(prefix)) delete clickLogs[k]; });
+            Object.keys(sampleData).forEach(k => { if (k.startsWith(prefix)) delete sampleData[k]; });
+            localStorage.setItem('clickLogs', JSON.stringify(clickLogs));
+            localStorage.setItem('sampleData', JSON.stringify(sampleData));
+            closeM(); render();
+        }
+    }
+
+    function showEditRecord(dateStr) {
+        const stats = getDayStats(dateStr);
+        const s = stats ? stats.raw.first.toLocaleTimeString('zh-CN', {hour12:false}) : "09:00:00";
+        const e = stats ? stats.raw.last.toLocaleTimeString('zh-CN', {hour12:false}) : "18:00:00";
+        document.getElementById('modal-layer').innerHTML = `
+            <div class="modal">
+                <div class="modal-content">
+                    <div class="modal-title">校准 ${dateStr}</div>
+                    <div class="form-group"><label>上班</label><input type="time" step="1" id="cal-start" class="input-text" value="${s}"></div>
+                    <div class="form-group"><label>下班</label><input type="time" step="1" id="cal-end" class="input-text" value="${e}"></div>
+                    <div class="modal-btns">
+                        <button class="btn-modal btn-cancel" onclick="closeM()">取消</button>
+                        <button class="btn-modal btn-confirm" onclick="saveCalibration('${dateStr}')">保存</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function saveCalibration(dateStr) {
+        const s = document.getElementById('cal-start').value;
+        const e = document.getElementById('cal-end').value;
+        clickLogs[dateStr] = [`${dateStr}T${s}.000Z`, `${dateStr}T${e}.000Z` ];
+        localStorage.setItem('clickLogs', JSON.stringify(clickLogs));
+        closeM(); render();
+    }
+
+    function closeM() { document.getElementById('modal-layer').innerHTML = ''; }
+
+    function getDayStats(dateStr) {
+        const logs = clickLogs[dateStr];
+        if (!logs || logs.length === 0) return null;
+        const times = logs.map(t => new Date(t)).sort((a,b) => a-b);
+        const diff = times[times.length-1] - times[0];
+        const h = Math.floor(diff/3600000);
+        const m = Math.floor((diff%3600000)/60000);
+        const hoursFixed = (diff/3600000).toFixed(1) + 'h'; 
+        return { duration: `${h}h${m}m`, count: logs.length, hours: hoursFixed, diffMs: diff, raw: {first: times[0], last: times[times.length-1]} };
+    }
+
+    function recordTime() {
+        const today = new Date().toISOString().slice(0,10);
+        if (!clickLogs[today]) clickLogs[today] = [];
+        clickLogs[today].push(new Date().toISOString());
+        localStorage.setItem('clickLogs', JSON.stringify(clickLogs));
+        if(navigator.vibrate) navigator.vibrate(50);
+        render();
+    }
+
+    function render() {
+        const todayStr = new Date().toISOString().slice(0,10);
+        const stats = getDayStats(todayStr);
+        document.getElementById('today-stats-content').innerHTML = stats 
+            ? `<div class="stats-highlight">${stats.duration}</div><div class="stats-sub">${stats.count}次</div>` 
+            : `<div class="stats-highlight" style="color:#d1d5db">--</div><div class="stats-sub">未开始</div>`;
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        const root = document.getElementById('calendar-root');
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const todayStr = new Date().toISOString().slice(0,10);
+
+        let monthTotalMs = 0;
+        let monthWorkDays = 0;
+
+        let html = `
+        <div class="month-selector">
+            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+            <div class="month-text">${year}年 ${month+1}月</div>
+            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+        </div>
+        <div class="calendar-grid">`;
+        
+        html += ['日','一','二','三','四','五','六'].map(d => `<div class="cal-head">${d}</div>`).join('');
+        for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const stats = getDayStats(dateStr);
+            const isSample = sampleData[dateStr];
+            
+            if(stats) {
+                monthWorkDays++;
+                monthTotalMs += stats.diffMs;
+            }
+
+            let classes = ['cal-day'];
+            if (dateStr === todayStr) classes.push('today');
+            if (stats) classes.push('has-record');
+            if (isSample) classes.push('has-sample');
+            if (selectedDate === dateStr) classes.push('selected');
+            
+            html += `
+                <div class="${classes.join(' ')}" 
+                     onmousedown="startPress('${dateStr}')" onmouseup="endPress('${dateStr}')" 
+                     ontouchstart="startPress('${dateStr}')" ontouchend="endPress('${dateStr}')">
+                    <div class="day-num">${d}</div>
+                    <div class="day-duration">${stats ? stats.hours : ''}</div>
+                </div>`;
+        }
+        html += `</div>`;
+
+        const totalH = Math.floor(monthTotalMs / 3600000);
+        const totalM = Math.floor((monthTotalMs % 3600000) / 60000);
+
+        html += `
+            <div class="month-summary">
+                <div class="summary-item">
+                    <div class="summary-label">本月工时</div>
+                    <div class="summary-val" style="color:var(--primary)">${totalH}h ${totalM}m</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">出勤天数</div>
+                    <div class="summary-val">${monthWorkDays} 天</div>
+                </div>
+            </div>
+        `;
+
+        root.innerHTML = html;
+    }
+
+    function startPress(dateStr) { pressTimer = setTimeout(() => { showDetail(dateStr); pressTimer = null; }, 500); }
+    function endPress(dateStr) { if (pressTimer) { clearTimeout(pressTimer); selectedDate = (selectedDate === dateStr) ? null : dateStr; render(); pressTimer = null; } }
+
+    function showDetail(dateStr) {
+        const stats = getDayStats(dateStr);
+        const sample = sampleData[dateStr];
+        if (!stats && !sample) return;
+
+        const html = `
+            <div class="modal">
+                <div class="modal-content">
+                    <div class="modal-title">详情 ${dateStr}</div>
+                    ${stats ? `
+                        <div style="background:#f9fafb; border-radius:8px; padding:12px; margin-bottom:12px;">
+                            <div class="detail-row"><span>最早</span><span>${stats.raw.first.toLocaleTimeString()}</span></div>
+                            <div class="detail-row"><span>最晚</span><span>${stats.raw.last.toLocaleTimeString()}</span></div>
+                            <div class="detail-row" style="border:none"><span>时长</span><span style="color:var(--primary);font-weight:700">${stats.duration}</span></div>
+                        </div>
+                        <button onclick="showEditRecord('${dateStr}')" style="width:100%; padding:10px; border:1px dashed #e5e7eb; color:var(--primary); background:white; border-radius:8px; font-weight:600;">✏️ 校准时间</button>
+                    ` : '<div style="text-align:center; padding:15px; color:#9ca3af; background:#f9fafb; border-radius:8px;">无打卡</div>'}
+                    ${sample ? `
+                        <div class="remark-area">
+                            <strong style="display:block; margin-bottom:4px;color:#92400e">📌 备注：</strong>${sample.remark}
+                            <div style="text-align:right; margin-top:5px;"><button onclick="delSam('${dateStr}')" style="border:none; color:#ef4444; background:none; font-weight:600;">删除标记</button></div>
+                        </div>` : ''}
+                    <button class="btn-modal btn-cancel" onclick="closeM()" style="width:100%; margin-top:15px;">关闭</button>
+                </div>
+            </div>`;
+        document.getElementById('modal-layer').innerHTML = html;
+    }
+
+    window.delSam = function(d) { delete sampleData[d]; localStorage.setItem('sampleData', JSON.stringify(sampleData)); closeM(); render(); };
+    function changeMonth(step) { currentMonth.setMonth(currentMonth.getMonth() + step); render(); }
+    init();
+</script>
+</body>
+</html>
